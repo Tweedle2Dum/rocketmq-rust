@@ -294,10 +294,10 @@ struct GroupConsumeInfo {
 impl GroupConsumeInfo {
     fn consume_type_desc(&self) -> &str {
         if self.count != 0 {
-            if self.consume_type == ConsumeType::ConsumeActively {
-                "PULL"
-            } else {
-                "PUSH"
+            match self.consume_type {
+                ConsumeType::ConsumeActively => "PULL",
+                ConsumeType::ConsumePassively => "PUSH",
+                ConsumeType::ConsumePop => "POP",
             }
         } else {
             ""
@@ -336,6 +336,9 @@ mod tests {
 
         info.consume_type = ConsumeType::ConsumePassively;
         assert_eq!(info.consume_type_desc(), "PUSH");
+
+        info.consume_type = ConsumeType::ConsumePop;
+        assert_eq!(info.consume_type_desc(), "POP");
 
         info.count = 0;
         assert_eq!(info.consume_type_desc(), "");
