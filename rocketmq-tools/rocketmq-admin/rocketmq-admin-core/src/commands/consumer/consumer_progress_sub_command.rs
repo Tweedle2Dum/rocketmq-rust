@@ -121,7 +121,7 @@ impl ConsumerProgressSubCommand {
 
             if self.show_client_ip {
                 println!(
-                    "{:<64}  {:<32}  {:<4}  {:<20}  {:<20}  {:<20} {:<20} {:<20} {}",
+                    "{:<64}  {:<32}  {:<4}  {:<20}  {:<20}  {:<20} {:<20} {:<20} #LastTime",
                     "#Topic",
                     "#Broker Name",
                     "#QID",
@@ -129,20 +129,18 @@ impl ConsumerProgressSubCommand {
                     "#Consumer Offset",
                     "#Client IP",
                     "#Diff",
-                    "#Inflight",
-                    "#LastTime"
+                    "#Inflight"
                 );
             } else {
                 println!(
-                    "{:<64}  {:<32}  {:<4}  {:<20}  {:<20}  {:<20} {:<20} {}",
+                    "{:<64}  {:<32}  {:<4}  {:<20}  {:<20}  {:<20} {:<20} #LastTime",
                     "#Topic",
                     "#Broker Name",
                     "#QID",
                     "#Broker Offset",
                     "#Consumer Offset",
                     "#Diff",
-                    "#Inflight",
-                    "#LastTime"
+                    "#Inflight"
                 );
             }
 
@@ -199,8 +197,8 @@ impl ConsumerProgressSubCommand {
             println!("Consume Inflight Total: {}", inflight_total);
         } else {
             println!(
-                "{:<64}  {:<6}  {:<24} {:<5}  {:<14}  {:<7}  {}",
-                "#Group", "#Count", "#Version", "#Type", "#Model", "#TPS", "#Diff Total"
+                "{:<64}  {:<6}  {:<24} {:<5}  {:<14}  {:<7}  #Diff Total",
+                "#Group", "#Count", "#Version", "#Type", "#Model", "#TPS"
             );
 
             let topic_list = admin.fetch_all_topic_list().await?;
@@ -329,9 +327,11 @@ mod tests {
 
     #[test]
     fn test_consume_type_desc() {
-        let mut info = GroupConsumeInfo::default();
-        info.count = 1;
-        info.consume_type = ConsumeType::ConsumeActively;
+        let mut info = GroupConsumeInfo {
+            count: 1,
+            consume_type: ConsumeType::ConsumeActively,
+            ..Default::default()
+        };
         assert_eq!(info.consume_type_desc(), "PULL");
 
         info.consume_type = ConsumeType::ConsumePassively;
@@ -343,10 +343,12 @@ mod tests {
 
     #[test]
     fn test_message_model_desc() {
-        let mut info = GroupConsumeInfo::default();
-        info.count = 1;
-        info.consume_type = ConsumeType::ConsumePassively;
-        info.message_model = MessageModel::Clustering;
+        let mut info = GroupConsumeInfo {
+            count: 1,
+            consume_type: ConsumeType::ConsumePassively,
+            message_model: MessageModel::Clustering,
+            ..Default::default()
+        };
         assert_eq!(info.message_model_desc(), "CLUSTERING");
 
         info.message_model = MessageModel::Broadcasting;
@@ -362,9 +364,11 @@ mod tests {
 
     #[test]
     fn test_version_desc() {
-        let mut info = GroupConsumeInfo::default();
-        info.count = 1;
-        info.version = RocketMqVersion::V4_9_4 as i32;
+        let mut info = GroupConsumeInfo {
+            count: 1,
+            version: RocketMqVersion::V4_9_4 as i32,
+            ..Default::default()
+        };
         assert_eq!(info.version_desc(), "V4_9_4");
 
         info.count = 0;
