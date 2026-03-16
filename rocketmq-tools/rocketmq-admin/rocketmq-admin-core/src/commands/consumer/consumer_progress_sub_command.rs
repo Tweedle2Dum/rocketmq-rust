@@ -1,3 +1,17 @@
+// Copyright 2023 The RocketMQ Rust Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use std::collections::HashMap;
 
 use cheetah_string::CheetahString;
@@ -21,7 +35,13 @@ pub struct ConsumerProgressSubCommand {
     #[arg(short = 'g', long = "groupName", required = false, help = "consumer group name")]
     consumer_group: Option<String>,
 
-    #[arg(short = 't', long = "topicName", required = false, help = "topic name")]
+    #[arg(
+        short = 't',
+        long = "topicName",
+        required = false,
+        help = "topic name",
+        requires = "consumer_group"
+    )]
     topic_name: Option<String>,
 
     #[arg(
@@ -29,7 +49,8 @@ pub struct ConsumerProgressSubCommand {
         long = "showClientIP",
         required = false,
         help = "Show Client IP per Queue",
-        default_value_t = false
+        default_value_t = false,
+        requires = "consumer_group"
     )]
     show_client_ip: bool,
 
@@ -37,13 +58,14 @@ pub struct ConsumerProgressSubCommand {
         short = 'c',
         long = "cluster",
         required = false,
-        help = "Cluster name or lmq parent topic, lmq is used to find the route."
+        help = "Cluster name or lmq parent topic, lmq is used to find the route.",
+        requires = "consumer_group"
     )]
     cluster: Option<String>,
 
     #[arg(
         short = 'n',
-        long = "name server address",
+        long = "namesrvAddr",
         required = false,
         help = "input name server address"
     )]
@@ -194,7 +216,7 @@ impl ConsumerProgressSubCommand {
                         .examine_consume_stats(consumer_group.clone().into(), None, None, None, None)
                         .await
                     {
-                        group_consume_info.consume_tps = consume_stats.get_consume_tps() as i32;
+                        group_consume_info.consume_tps = consume_stats.get_consume_tps();
                         group_consume_info.diff_total = consume_stats.compute_total_diff();
                     }
 
@@ -210,7 +232,7 @@ impl ConsumerProgressSubCommand {
                     }
 
                     println!(
-                        "{:<64}  {:<6}  {:<24} {:<5}  {:<14}  {:<7}  {}",
+                        "{:<64}  {:<6}  {:<24} {:<5}  {:<14}  {:<7.2}  {}",
                         group_consume_info.group,
                         group_consume_info.count,
                         if group_consume_info.count > 0 {
@@ -267,7 +289,7 @@ struct GroupConsumeInfo {
     count: i32,
     consume_type: ConsumeType,
     message_model: MessageModel,
-    consume_tps: i32,
+    consume_tps: f64,
     diff_total: i64,
 }
 
@@ -358,10 +380,19 @@ mod tests {
             "-t",
             "test-topic",
             "-s",
+            "--namesrvAddr",
+            "127.0.0.1:9876",
         ])
         .unwrap();
         assert_eq!(cmd.consumer_group, Some("test-group".to_string()));
         assert_eq!(cmd.topic_name, Some("test-topic".to_string()));
         assert!(cmd.show_client_ip);
+        assert_eq!(cmd.namesrv_addr, Some("127.0.0.1:9876".to_string()));
+    }
+
+    #[test]
+    fn test_invalid_command_parsing() {
+        let result = ConsumerProgressSubCommand::try_parse_from(vec!["consumerProgress", "-t", "test-topic"]);
+        assert!(result.is_err());
     }
 }
