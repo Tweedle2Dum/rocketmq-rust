@@ -134,13 +134,7 @@ impl ConsumerProgressSubCommand {
             } else {
                 println!(
                     "{:<64}  {:<32}  {:<4}  {:<20}  {:<20}  {:<20} {:<20} #LastTime",
-                    "#Topic",
-                    "#Broker Name",
-                    "#QID",
-                    "#Broker Offset",
-                    "#Consumer Offset",
-                    "#Diff",
-                    "#Inflight"
+                    "#Topic", "#Broker Name", "#QID", "#Broker Offset", "#Consumer Offset", "#Diff", "#Inflight"
                 );
             }
 
